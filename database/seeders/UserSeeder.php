@@ -24,8 +24,5 @@ class UserSeeder extends Seeder
                 'avatar_disk' => 'public',
             ]
         );
-
-        User::factory(100)->create();
-
     }
 }
