@@ -24,22 +24,30 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $verifiedAt = fake()->boolean(90)
+            ? fake()->dateTimeBetween('-1 year', 'now')
+            : null;
+
+        $isActive = $verifiedAt
+            ? fake()->boolean(90)
+            : false;
+
+        $hasLoggedIn = $verifiedAt && fake()->boolean(80);
+
+        $lastLoginAt = $hasLoggedIn
+            ? fake()->dateTimeBetween($verifiedAt, 'now')
+            : null;
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'email_verified_at' => $verifiedAt,
             'password' => static::$password ??= Hash::make('password'),
+            'is_active' => $isActive,
+            'avatar' => null,
+            'avatar_disk' => 'public',
+            'last_login_at' => $lastLoginAt,
             'remember_token' => Str::random(10),
         ];
-    }
-
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
     }
 }
