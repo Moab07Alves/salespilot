@@ -22,6 +22,7 @@ class PermissionSeeder extends Seeder
         ];
 
         $actions = [
+            'viewAny',
             'view',
             'create',
             'update',
