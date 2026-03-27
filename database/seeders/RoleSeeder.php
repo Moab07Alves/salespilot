@@ -14,14 +14,18 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         $guards = [
-            'web'
-        ];
+            'web'];
 
         foreach ($guards as $guard) {
-            Role::firstOrCreate([
-                'name' => 'admin',
-                'guard_name' => $guard,
-            ]);
+            Role::firstOrCreate(
+                [
+                    'name' => 'admin',
+                    'guard_name' => $guard,
+                ],
+                [
+                    'description' => 'Administrador do sistema com acesso total a todas as funcionalidades.',
+                ]
+            );
         }
     }
 }

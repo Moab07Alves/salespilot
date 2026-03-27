@@ -18,7 +18,8 @@ class PermissionSeeder extends Seeder
         ];
 
         $resources = [
-            'users'
+            'users',
+            'roles'
         ];
 
         $actions = [
@@ -26,7 +27,9 @@ class PermissionSeeder extends Seeder
             'view',
             'create',
             'update',
-            'delete'
+            'delete',
+            'restore',
+            'forceDelete'
         ];
 
         foreach ($guards as $guard) {
