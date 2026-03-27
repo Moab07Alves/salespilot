@@ -8,6 +8,18 @@ use Illuminate\Auth\Access\Response;
 class UserPolicy
 {
     /**
+     * Permite acesso total ao admin.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
