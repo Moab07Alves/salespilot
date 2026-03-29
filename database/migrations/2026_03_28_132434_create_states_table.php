@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
             $table->index('name');
             $table->index('is_active');
-            $table->unique(['country_id', 'code']);
+            $table->unique(['country_id', 'name']);
         });
     }
 
