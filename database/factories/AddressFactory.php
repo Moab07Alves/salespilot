@@ -2,19 +2,14 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
+use App\Models\Address;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<User>
+ * @extends Factory<Address>
  */
-class UserFactory extends Factory
+class AddressFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
     /**
      * Define the model's default state.
      *
