@@ -19,7 +19,15 @@ class PermissionSeeder extends Seeder
 
         $resources = [
             'users',
-            'roles'
+            'roles',
+
+            'employees',
+            'departments',
+            'positions',
+
+            'work_schedules',
+            'employee_work_schedules',
+            'work_schedule_exceptions',
         ];
 
         $actions = [

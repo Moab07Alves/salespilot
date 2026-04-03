@@ -2,78 +2,79 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable([
-    'name',
-    'email',
-    'password',
-    'is_active',
-    'avatar',
-    'avatar_disk',
-    'last_login_at'
-])]
-#[Hidden([
-    'password',
-    'remember_token'
-])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'is_active',
+        'avatar',
+        'avatar_disk',
+        'last_login_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'last_login_at'     => 'datetime',
+        'is_active'         => 'boolean',
+        'password'          => 'hashed',
+    ];
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Relação 1:1 com Employee
      */
-    protected function casts(): array
+    public function employee()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'last_login_at' => 'datetime',
-            'is_active' => 'boolean',
-            'password' => 'hashed',
-        ];
+        return $this->hasOne(Employee::class);
     }
 
     /**
-     * Retorna a URL do avatar do usuário.
-     *
-     * A URL é gerada dinamicamente com base no disco de armazenamento definido
-     * no campo "avatar_disk" (ex: public, s3, etc.).
-     *
-     * Caso o usuário não possua avatar, retorna null.
-     *
-     * @return string|null
-     */
-    public function getAvatarUrlAttribute(): ?string
-    {
-        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-        $disk = Storage::disk($this->avatar_disk ?? 'public');
-
-        return $this->avatar
-            ? $disk->url($this->avatar)
-            : null;
-    }
-
-    /**
-     * Scope para filtrar apenas usuários ativos.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Scope para usuários ativos
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Acessor: verifica se é funcionário
+     */
+    public function isEmployee(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->employee !== null
+        );
+    }
+
+    /**
+     * Acessor: URL do avatar
+     */
+    public function avatarUrl(): Attribute
+    {
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = Storage::disk($this->avatar_disk ?? 'public');
+
+        return Attribute::make(
+            get: fn () => $this->avatar
+                ? $disk->url($this->avatar)
+                : null
+        );
     }
 }
