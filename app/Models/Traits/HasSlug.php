@@ -3,83 +3,93 @@
 namespace App\Models\Traits;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
 
 trait HasSlug
 {
     protected static function bootHasSlug()
     {
-        static::saving(function ($model) {
+        static::creating(fn ($model) => $model->generateSlug());
 
-            $slugField = $model->getSlugField();
-            $slug = $model->buildSlug();
-
-            if (!$model->isDirty($slugField) && $model->{$slugField}) {
-                return;
+        static::updating(function ($model) {
+            if ($model->shouldRegenerateSlug()) {
+                $model->generateSlug();
             }
-
-            $model->{$slugField} = $slug;
         });
+
+        static::restoring(fn ($model) => $model->handleSlugOnRestore());
     }
 
-    protected function buildSlug(): string
+    protected function generateSlug(): void
+    {
+        $slugField = $this->getSlugField();
+
+        // Não sobrescreve slug manual
+        if (!empty($this->{$slugField}) && !$this->isDirty($slugField)) {
+            return;
+        }
+
+        $baseSlug = $this->buildBaseSlug();
+
+        $this->{$slugField} = $this->resolveUniqueSlug($baseSlug);
+    }
+
+    protected function buildBaseSlug(): string
     {
         $parts = [];
 
         foreach ($this->getSlugSource() as $field) {
             $value = data_get($this, $field);
 
-            if ($value) {
+            if (!empty($value)) {
                 $parts[] = Str::slug($value);
             }
         }
 
-        $baseSlug = implode('-', array_filter($parts));
+        $slug = implode('-', $parts);
 
-        if ($baseSlug === '') {
-            $baseSlug = Str::random(8);
-        }
-
-        $cacheKey = $this->getSlugCacheKey($baseSlug);
-
-        return Cache::rememberForever($cacheKey, function () use ($baseSlug) {
-            return $this->resolveUniqueSlug($baseSlug);
-        });
+        return $slug !== '' ? $slug : Str::random(8);
     }
 
     protected function resolveUniqueSlug(string $baseSlug): string
     {
         $slug = $baseSlug;
-
-        if (!$this->slugExists($slug)) {
-            return $slug;
-        }
-
         $counter = 1;
 
-        do {
+        while ($this->slugExists($slug)) {
             $slug = "{$baseSlug}-{$counter}";
             $counter++;
-        } while ($this->slugExists($slug));
+        }
 
         return $slug;
     }
 
     protected function slugExists(string $slug): bool
     {
-        return static::query()
+        return static::withTrashed()
             ->where($this->getSlugField(), $slug)
             ->when($this->exists, fn ($q) => $q->whereKeyNot($this->getKey()))
             ->exists();
     }
 
-    protected function getSlugCacheKey(string $baseSlug): string
+    protected function shouldRegenerateSlug(): bool
     {
-        return sprintf(
-            'slug:%s:%s',
-            static::class,
-            $baseSlug
-        );
+        return $this->isDirty($this->getSlugSource());
+    }
+
+    protected function handleSlugOnRestore(): void
+    {
+        $slugField = $this->getSlugField();
+        $currentSlug = $this->{$slugField};
+
+        $exists = static::query()
+            ->where($slugField, $currentSlug)
+            ->whereNull('deleted_at')
+            ->whereKeyNot($this->getKey())
+            ->exists();
+
+        if ($exists) {
+            $this->{$slugField} = $this->resolveUniqueSlug(Str::slug($currentSlug));
+        }
     }
 
     public function getSlugField(): string

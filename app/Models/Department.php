@@ -39,7 +39,7 @@ class Department extends Model
     }
 
     /**
-     * Departamentos ativos
+     * Scope para departamentos ativos
      */
     public function scopeActive($query)
     {
@@ -47,7 +47,7 @@ class Department extends Model
     }
 
     /**
-     * Departamentos inativos
+     * Scope para departamentos inativos
      */
     public function scopeInactive($query)
     {
@@ -59,7 +59,7 @@ class Department extends Model
      */
     public function hasManager(): bool
     {
-        return !is_null($this->manager_id);
+        return $this->manager()->exists();
     }
 
     /**

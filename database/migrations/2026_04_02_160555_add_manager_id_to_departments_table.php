@@ -16,6 +16,7 @@ return new class extends Migration
                   ->nullable()
                   ->constrained('employees')
                   ->restrictOnDelete();
+            $table->index('manager_id');
         });
     }
 

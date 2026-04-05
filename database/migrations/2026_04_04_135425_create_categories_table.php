@@ -11,16 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
+        Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
             $table->text('description')->nullable();
+            $table->foreignId('parent_id')
+                  ->nullable()
+                  ->constrained('categories')
+                  ->nullOnDelete();
             $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
             $table->softDeletes();
             $table->unique(['slug', 'deleted_at']);
+            $table->index('name');
+            $table->index('parent_id');
             $table->index('is_active');
+            $table->index('sort_order');
         });
     }
 
@@ -29,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('departments');
+        Schema::dropIfExists('categories');
     }
 };

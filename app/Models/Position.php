@@ -39,6 +39,14 @@ class Position extends Model
     }
 
     /**
+     * Relação recursiva para árvore completa
+     */
+    public function childrenRecursive()
+    {
+        return $this->children()->with('childrenRecursive');
+    }
+
+    /**
      * Funcionários vinculados a este cargo
      */
     public function employees()
@@ -47,7 +55,7 @@ class Position extends Model
     }
 
     /**
-     * Apenas cargos ativos
+     * Scope para cargos ativos
      */
     public function scopeActive($query)
     {
@@ -55,7 +63,7 @@ class Position extends Model
     }
 
     /**
-     * Apenas cargos raiz (sem pai)
+     * Scope para cargos raiz (sem pai)
      */
     public function scopeRoot($query)
     {
@@ -63,11 +71,19 @@ class Position extends Model
     }
 
     /**
+     * Scope para ordenação padrão
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('name');
+    }
+
+    /**
      * Verifica se é cargo raiz
      */
     public function isRoot(): bool
     {
-        return is_null($this->parent_id);
+        return $this->parent_id === null;
     }
 
     /**
@@ -75,7 +91,7 @@ class Position extends Model
      */
     public function isChild(): bool
     {
-        return !is_null($this->parent_id);
+        return $this->parent_id !== null;
     }
 
     /**
